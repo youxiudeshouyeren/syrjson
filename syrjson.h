@@ -15,6 +15,7 @@ typedef enum{	SYR_NULL, SYR_FALSE, SYR_TRUE, SYR_NUMBER, SYR_STRING,
 
 
 typedef struct{
+	double n;
 	syr_type type;
 }syr_value;
 
@@ -25,12 +26,15 @@ enum{
 	SYR_PARSE_OK=0,
 	SYR_PARSE_EXPECT_VALUE,
 	SYR_PARSE_INVALID_VALUE,
-	SYR_PARSE_ROOT_NOT_SINGULAR
+	SYR_PARSE_ROOT_NOT_SINGULAR,
+	SYR_PARSE_NUMBER_TOO_BIG
 };
 
 
 int syr_parse(syr_value* v,const char* json);
 
 syr_type syr_get_type(const syr_value* v);
+
+double syr_get_number(const syr_value* v);
 
 #endif /* SYRJSON_H_ */

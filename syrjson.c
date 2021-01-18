@@ -1,11 +1,17 @@
 #include "syrjson.h"
 #include <assert.h>   //assert()
-#include <stdlib.h>   //NULL
+#include <stdlib.h>   //NULL strtod()
 #include<stdio.h>
+#include<errno.h>  //errno,ERANGE
+#include<math.h>   //HUGE_VAL
 
 //检测字符是否为所需字符的宏定义
 #define EXPECT(c,ch)  do{ assert(*c->json==(ch));c->json++;}while(0)
 
+//检测是否为0-9
+#define ISDIGIT(ch)  ((ch)>='0' &&(ch)<='9')
+
+#define ISDIGIT1TO9(ch) ((ch)>='1' && ((ch)<='9'))
 
 //json数据
 typedef struct{
@@ -26,6 +32,7 @@ static void syr_parse_whitespace(syr_context* c){
 
 }
 
+#if 0
 //解析null
 static int syr_parse_null(syr_context* c,syr_value* v ){
 	EXPECT(c, 'n');
@@ -72,16 +79,80 @@ static int syr_parse_false(syr_context* c,syr_value* v){
 
 	return SYR_PARSE_OK;
 }
+#endif
 
+//解析数字
+static int syr_parse_number(syr_context* c,syr_value* v){
+
+	const char* p=c->json;
+
+	if(*p=='-')p++;
+
+	if(*p=='0')
+		p++;
+	else{
+		if(!ISDIGIT1TO9(*p))
+			return SYR_PARSE_INVALID_VALUE;
+		for(p++;ISDIGIT(*p);p++);
+	}
+
+	if(*p=='.'){
+		p++;
+		if(!ISDIGIT(*p))
+			return SYR_PARSE_INVALID_VALUE;
+		for(p++;ISDIGIT(*p);p++);
+	}
+
+	if(*p=='e'||*p=='E'){
+		p++;
+		if(*p=='+'||*p=='-')
+			p++;
+		if(!ISDIGIT(*p))
+			return SYR_PARSE_INVALID_VALUE;
+		for(p++;ISDIGIT(*p);p++);
+	}
+
+
+
+	errno=0;
+	v->n=strtod(c->json,NULL);
+	//待查
+	if(errno==ERANGE &&((v->n==HUGE_VAL)||v->n==-HUGE_VAL))
+		return SYR_PARSE_NUMBER_TOO_BIG;
+
+
+	v->type=SYR_NUMBER;
+	c->json=p;
+	return SYR_PARSE_OK;
+
+
+}
+
+
+
+static int syr_parse_literal(syr_context* c,syr_value* v,const char* literal,syr_type type){
+
+	size_t i;// i为literal长度减1
+	EXPECT(c,literal[0]);  //使用EXPECT 后，c->json指针向后了一个 因此需要比较的literal向后一位
+	for(i=0;literal[i+1];i++){
+		if(c->json[i]!=literal[i+1])
+			return SYR_PARSE_INVALID_VALUE;
+	}
+
+	c->json+=i;
+	v->type=type;
+
+	return SYR_PARSE_OK;
+}
 //
 static int syr_parse_value(syr_context *c, syr_value* v){
 	switch(*c->json){
-	case 'n': return syr_parse_null(c,v);
-	case 't':return  syr_parse_true(c,v);//检测true
-	case 'f':return syr_parse_false(c, v);//检测false
-
+	case 'n': return syr_parse_literal(c, v, "null", SYR_NULL);
+	case 't':return  syr_parse_literal(c, v, "true", SYR_TRUE);//检测true
+	case 'f':return syr_parse_literal(c, v,"false",SYR_FALSE);//检测false
+    default: return syr_parse_number(c,v);
 	case '\0':return SYR_PARSE_EXPECT_VALUE;
-	default: return SYR_PARSE_INVALID_VALUE;
+
 	}
 }
 
@@ -109,5 +180,11 @@ int syr_parse(syr_value* v, const char* json){
 syr_type syr_get_type(const syr_value* v){
 	assert(v!=NULL);
 	return v->type;
+}
+
+double syr_get_number(const syr_value* v){
+	assert(v!=NULL && v->type==SYR_NUMBER);
+
+	return v->n;
 }
 
