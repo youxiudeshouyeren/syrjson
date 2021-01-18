@@ -29,6 +29,20 @@ static void test_parse_null(){
 }
 
 
+static void test_parse_true(){
+	syr_value v;
+	v.type=SYR_FALSE;
+	EXPECT_EQ_INT(SYR_PARSE_OK,syr_parse(&v,"true"));
+	EXPECT_EQ_INT(SYR_TRUE,syr_get_type(&v));
+}
+
+static void test_parse_false(){
+	syr_value v;
+	v.type=SYR_FALSE;
+	EXPECT_EQ_INT(SYR_PARSE_OK,syr_parse(&v,"false"));
+	EXPECT_EQ_INT(SYR_FALSE,syr_get_type(&v));
+}
+
 static void test_parse_expect_value(){
 	syr_value v;
 	v.type=SYR_FALSE;
@@ -48,6 +62,15 @@ static void test_parse_invalid_value(){
 	EXPECT_EQ_INT(SYR_PARSE_INVALID_VALUE,syr_parse(&v, "nul"));
 	EXPECT_EQ_INT(SYR_NULL,syr_get_type(&v));
 
+
+	v.type=SYR_FALSE;
+	EXPECT_EQ_INT(SYR_PARSE_INVALID_VALUE,syr_parse(&v,"tru"));
+	EXPECT_EQ_INT(SYR_NULL,syr_get_type(&v));
+
+	v.type=SYR_FALSE;
+	EXPECT_EQ_INT(SYR_PARSE_INVALID_VALUE,syr_parse(&v,"fals"));
+	EXPECT_EQ_INT(SYR_NULL,syr_get_type(&v));
+
 	v.type=SYR_FALSE;
 	EXPECT_EQ_INT(SYR_PARSE_INVALID_VALUE,syr_parse(&v,"?"));
 	EXPECT_EQ_INT(SYR_NULL,syr_get_type(&v));
@@ -64,6 +87,8 @@ static void test_parse_root_not_singular() {
 
 static void test_parse() {
     test_parse_null();
+    test_parse_true();
+    test_parse_false();
     test_parse_expect_value();
     test_parse_invalid_value();
     test_parse_root_not_singular();
