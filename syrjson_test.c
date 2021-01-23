@@ -169,7 +169,7 @@ static void test_parse_root_not_singular() {
 
 
     /* invalid number */
-    TEST_ERROR(3, "0123"); /* after zero should be '.' , 'E' , 'e' or nothing */
+    TEST_ERROR(SYR_PARSE_ROOT_NOT_SINGULAR, "0123"); /* after zero should be '.' , 'E' , 'e' or nothing */
     TEST_ERROR(SYR_PARSE_ROOT_NOT_SINGULAR, "0x0");
     TEST_ERROR(SYR_PARSE_ROOT_NOT_SINGULAR, "0x123");
 

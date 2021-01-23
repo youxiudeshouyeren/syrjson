@@ -10,12 +10,19 @@
 typedef enum{	SYR_NULL, SYR_FALSE, SYR_TRUE, SYR_NUMBER, SYR_STRING,
 			SYR_ARRAY, SYR_OBJECT} syr_type;
 
+typedef struct syr_value syr_value;
 
 typedef struct{
 	union{
 		struct {
 			char* s; size_t len;
-		}s;
+		}s;//字符串
+
+		struct{
+			syr_value* e;
+			size_t size;
+
+		}a;//数组
 
 		double n;
 	}u;
@@ -36,7 +43,8 @@ enum{
 	SYR_PARSE_INVALID_STRING_ESCAPE,
 	SYR_PARSE_INVALID_STRING_CHAR,
 	SYR_PARSE_INVALID_UNICODE_HEX,
-	SYR_PARSE_INVALID_UNICODE_SURROGATE
+	SYR_PARSE_INVALID_UNICODE_SURROGATE,
+	SYR_PARSE_MISS_COMMA_OR_SQUARE_BRACKET
 };
 
 #define syr_init(v)  do{(v)->type=SYR_NULL;}while(0)
@@ -58,5 +66,8 @@ void syr_set_boolean(syr_value* v,int b);
 const char* syr_get_string(const syr_value* v);
 size_t syr_get_string_length(const syr_value* v);
 void syr_set_string(syr_value* v, const char* s,size_t len);
+
+size_t syr_get_array_size(const syr_value* v);
+syr_value* syr_get_array_element(const syr_value* v,size_t index);
 
 #endif /* SYRJSON_H_ */

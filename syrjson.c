@@ -276,6 +276,43 @@ static int syr_parse_string(syr_context* c,syr_value* v){
 
 }
 
+static int syr_parse_value(syr_context* c,syr_value* v);
+
+static int syr_parse_array(syr_context* c,syr_value* v){
+	size_t size=0;
+	int ret;
+	EXPECT(c,'[');
+	if(*c->json==']'){
+		c->json++;
+		v->type=SYR_ARRAY;
+		v->u.a.size=0;
+		v->u.a.e=NULL;
+		return SYR_PARSE_OK;
+	}
+
+	for(;;){
+		syr_value e;
+		syr_init(&e);
+		if((ret=syr_parse_value(c,&e))!=SYR_PARSE_OK)
+			return ret;
+		memcpy(syr_context_push(c,sizeof(syr_value)),&e,sizeof(syr_value));
+		size++;
+		if(*c->json==',')
+			c->json++;
+		else if(*c->json==']'){
+			c->json++;
+			v->type=SYR_ARRAY;
+			v->u.a.size=size;
+			size *=sizeof(syr_value);
+			memcpy(v->u.a.e=(syr_value*)malloc(size),syr_context_pop(c,size),size);
+			return SYR_PARSE_OK;
+
+		}
+		else{
+			 return SYR_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
+		}
+	}
+}
 
 static int syr_parse_literal(syr_context* c,syr_value* v,const char* literal,syr_type type){
 
@@ -299,6 +336,7 @@ static int syr_parse_value(syr_context *c, syr_value* v){
 	case 'f':return syr_parse_literal(c, v,"false",SYR_FALSE);//检测false
     default: return syr_parse_number(c,v);
     case '"':return syr_parse_string(c,v);
+    case '[':return syr_parse_array(c,v);
 	case '\0':return SYR_PARSE_EXPECT_VALUE;
 
 	}
@@ -388,5 +426,16 @@ void syr_set_string(syr_value* v,const char* s,size_t len){
 	v->u.s.len=len;
 	v->type=SYR_STRING;
 
+}
+
+size_t syr_get_array_size(const syr_value* v){
+	assert(v!=NULL&&v->type==SYR_ARRAY);
+	return v->u.a.size;
+}
+
+syr_value* syr_get_array_element(const syr_value* v,size_t index){
+	assert(v!=NULL&&v->type==SYR_ARRAY);
+	assert(index<v->u.a.size);
+	return &v->u.a.e[index];
 }
 
