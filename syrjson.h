@@ -12,7 +12,7 @@ typedef enum{	SYR_NULL, SYR_FALSE, SYR_TRUE, SYR_NUMBER, SYR_STRING,
 
 typedef struct syr_value syr_value;
 
-typedef struct{
+ struct syr_value{
 	union{
 		struct {
 			char* s; size_t len;
@@ -28,7 +28,7 @@ typedef struct{
 	}u;
 
 	syr_type type;
-}syr_value;
+};
 
 
 
